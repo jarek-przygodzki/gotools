@@ -32,12 +32,17 @@ func main() {
 			os.Exit(1)
 		}
 		remoteAddr := conn.RemoteAddr().String()
-		log.Println("Accepted connection from " + remoteAddr)
+		log.Printf("Accepted connection from %s (%v)\n", remoteAddr, conn)
 		go handleConnection(conn)
 	}
 }
 
 func handleConnection(conn net.Conn) {
+	defer func() {
+		log.Printf("Closing connection (%v)\n", conn)
+		conn.Close()
+	}()
+
 	buf := make([]byte, 1024)
 	for {
 		size, err := conn.Read(buf)
@@ -45,7 +50,8 @@ func handleConnection(conn net.Conn) {
 			if io.EOF == err {
 				break
 			}
-			log.Panicln(err)
+			log.Println(err)
+			return
 		}
 		bytes := buf[:size]
 		fmt.Printf("%s", hex.Dump(bytes))
